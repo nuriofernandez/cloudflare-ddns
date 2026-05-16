@@ -29,7 +29,7 @@ func Schedule(executableTask func()) {
 }
 
 func parseMinutes() int {
-	var intervalMinutes = os.Getenv("INTERVAL_MINUTES")
+	var intervalMinutes = os.Getenv("DDNS_REFRESH_INTERVAL_MINUTES")
 	if intervalMinutes == "" {
 		return 0
 	}
