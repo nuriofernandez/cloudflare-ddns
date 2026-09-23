@@ -43,6 +43,74 @@ services:
       - DDNS_REFRESH_INTERVAL_MINUTES=5
 ```
 
+### Kubernetes (homelab)
+
+```yml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudflare
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-ddns-secrets
+  namespace: cloudflare
+type: Opaque
+stringData:
+  IPINFO_API_TOKEN: "<token-here>"
+  CLOUDFLARE_API_TOKEN: "<token-here>"
+  CLOUDFLARE_ZONE_ID: "<zone-id-here>"
+  CLOUDFLARE_DNS_RECORD_ID: "<record-id-here>"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-ddns
+  namespace: cloudflare
+  labels:
+    app: cloudflare-ddns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-ddns
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns
+    spec:
+      containers:
+      - name: cloudflare-ddns
+        image: nuriofernandez/cloudflare-ddns:latest
+        imagePullPolicy: Always
+        env:
+        - name: IPINFO_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-ddns-secrets
+              key: IPINFO_API_TOKEN
+        - name: CLOUDFLARE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-ddns-secrets
+              key: CLOUDFLARE_API_TOKEN
+        - name: CLOUDFLARE_ZONE_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-ddns-secrets
+              key: CLOUDFLARE_ZONE_ID
+        - name: CLOUDFLARE_DNS_RECORD_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-ddns-secrets
+              key: CLOUDFLARE_DNS_RECORD_ID
+        - name: CLOUDFLARE_RECORD_NAME
+          value: "your.expected.dns.record.com"
+        - name: DDNS_REFRESH_INTERVAL_MINUTES
+          value: "5"
+```
+
 ### Cron job (binary)
 
 Install the binary with `go install`:
